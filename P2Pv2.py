@@ -21,7 +21,7 @@ import time
 import shutil
 import smtplib
 from email.mime.text import MIMEText
-from types import *
+from types import NoneType,sys
 import tarfile
 
 # Global VARS
@@ -155,6 +155,7 @@ class SiteClass:
             time.sleep(0.07)
             # Need to move up or we'll just redraw the same cell!
             pos += 1
+            i +=1
         # Current text: Progress ............... Done!
         win.addstr(1,26,"Done!")
         # Gotta show our changes.
@@ -178,12 +179,12 @@ class SiteClass:
     
     def filetoday(self):
         'Log file'
-	self.now = time.localtime(time.time())
-	self.year = self.now[0]
-	self.month = self.now[1]
-	self.day = self.now[2]
-	self.hour = self.now[3]
-	self.minutes = self.now[4]
+        self.now = time.localtime(time.time())
+        self.year = self.now[0]
+        self.month = self.now[1]
+        self.day = self.now[2]
+        self.hour = self.now[3]
+        self.minutes = self.now[4]
         self.seconds = self.now[5]
         self.logfolder = self.rootfolder+'/.xlogs'
         self.timestamp = `self.year`+`self.month`+`self.day`+"-"+`self.hour`+'h'+`self.minutes`+'m'+`self.seconds`+'s'
@@ -195,13 +196,15 @@ class SiteClass:
     def countfiles(self):
         'Counting files to be synchronized'
         self.count = 0
+        self.Flist = []
         self.syncsite = self.prodserver+':'+self.rootfolder
         self.exclusions = "--exclude-from "+self.rootfolder+"/.nP2P"
-	self.cmdcount = ('rsync -ravzOn --include .htaccess --progress '+self.exclusions+' '+self.rootfolder+'/* '+self.syncsite)
-	for i,fileList in enumerate(os.popen(self.cmdcount)):
-		self.count = i+1
-		#print "File count: "+'{0}\r'.format(self.count),
-        return self.count-4
+        self.cmdcount = ('rsync -ravzOn --include .htaccess --progress '+self.exclusions+' '+self.rootfolder+'/* '+self.syncsite)
+        for i,fileList in enumerate(os.popen(self.cmdcount)):
+            self.count = i+1
+            self.Flist = list.append(fileList)
+            #print "File count: "+'{0}\r'.format(self.count),
+        return self.count-4,self.Flist
     
     def siteversion(self):
         'Gets svn site checkout version if present'
@@ -213,6 +216,7 @@ class SiteClass:
         self.flst = flst
         for i,folderF in enumerate(self.flst):
             cleancmd = 'ssh '+self.prodserver+' rm -v '+self.rootfolder+'/'+folderF+'/*'
+            i +=1
             self.p2p_now(cleancmd)
 
     def backup2archive(self):
@@ -233,10 +237,10 @@ class SiteClass:
         return self.madeit, self.archived
     
     def archivecount(self):
-	"Get the list of backups a site has"
+        "Get the list of backups a site has"
         self.archivefolder = self.rootfolder+"/.archive/"
-	self.tarFiles = commands.getoutput('ls '+self.archivefolder)
-	return self.tarFiles
+        self.tarFiles = commands.getoutput('ls '+self.archivefolder)
+        return self.tarFiles
     
     def restorearchive(self,archivename,restorepoint):
         "Restore the archive to a TMP directory and deletes the archive file"
@@ -253,28 +257,28 @@ class SiteClass:
         tar = tarfile.open(self.archivename)
         m = tar.extractall(self.restorepoint)
         tar.close()
-	os.remove(self.archivename)
+        os.remove(self.archivename)
         return tar, m, self.archivename, self.restorepoint,  self.show_progress(), self.message
 
 
 
 def s_options(rootFolder):
-	"""What do to do with the select folder/site """
-	global file_count
-        file_count = syncsite.countfiles()
-	localFolder = rootFolder
-        global logging
-        global logfile
-        logging = syncsite.filetoday()
-        logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
+    "What do to do with the select folder/site "
+    global file_count
+    file_count = syncsite.countfiles()
+    localFolder = rootFolder
+    global logging
+    global logfile
+    logging = syncsite.filetoday()
+    logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
         
-        # Screen stuff
-        opts = ""
-        screen.clear()
-        screen.border(0)
-        screen.addstr(2, 2,"Found files to update: "+'{0}\r'.format(file_count),curses.A_BOLD)
-        
-	while opts != ord('0'):
+    # Screen stuff
+    opts = ""
+    screen.clear()
+    screen.border(0)
+    screen.addstr(2, 2,"Found files to update: "+'{0}\r'.format(file_count),curses.A_BOLD)
+    
+    while opts != ord('0'):
             screen.addstr(3, 4,"1 - Backup Remote Site")
             screen.addstr(4, 4,"2 - Synchronize from Local to Remote: ["+localFolder+"/* "+syncsite.prodserver+"]")
             screen.addstr(5, 4,"3 - Restore from a Local backup and synchronize to Remote")
@@ -294,7 +298,7 @@ def s_options(rootFolder):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
                 synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
-		screen.addstr(10, 4,"Synchronization finished.",curses.A_BOLD)
+                screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
                 syncsite.p2p_now(synccommand)
                 screen.refresh()
                 write2log("["+baselogstring+"]: ==================================================================")
@@ -327,11 +331,12 @@ def s_options(rootFolder):
                     else:
                         screen.refresh()
                 write2log("["+baselogstring+"]: ==================================================================")
-                #break
-        screen.refresh()
-        # send email with all logs!!!
-        send_mail(logfile,"techalert@wisekey.com","Finished PUSH2PROD operations for "+syncsite.syncsite,MailServer)
-        init_screen('0')
+                #break 
+                screen.refresh()
+                # send email with all logs!!!
+                send_mail(logfile,"techalert@wisekey.com","Finished PUSH2PROD operations for "+syncsite.syncsite,MailServer)
+                init_screen('0')
+
 
 def init_screen(xval):
     global s
@@ -369,11 +374,13 @@ def init_screen(xval):
                 screen.addstr(sl+7,4,"ERROR:" +sconf+" has not P2P_ROOT variable set. Please correct before using this tool.",curses.color_pair(1))
                 screen.addstr(sl+8,4,"Press any key to continue")
                 curses.endwin()
+                # var not used but needed to screen initialization
                 opts = screen.getch()
                 init_screen('0')
             else:
-               s_options(lFolder)
+                s_options(lFolder)
         else:
             curses.endwin()
             return 0
 init_screen(x)
+
