@@ -183,10 +183,10 @@ class SiteClass:
         # either chown or chmod. 
         if self.chtype == str('chown'):
             #os.setuid(0)
-            self.permscomm = 'ssh -l wiseweb vos02 /usr/bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         else:
             #os.setuid(0)
-            self.permscomm = 'ssh -l wiseweb vos02 /usr/bin/chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         return os.popen(self.permscomm)
     
     
@@ -313,9 +313,7 @@ def s_options(rootFolder):
             if opts == ord('2'):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
-                # syncsite.syncsite contains: 
-                #
-                #
+                # syncsite.syncsite
                 synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
                 # Change owner to wiseweb
