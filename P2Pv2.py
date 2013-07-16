@@ -25,7 +25,7 @@ from types import NoneType
 import tarfile
 
 # Global VARS
-ConfFolder="/home/WISEKEY/mdalbuquerque/Public/"
+ConfFolder="/home/wiseweb/public_html/conf/"
 RootFolder="P2P_ROOT"
 PROD="wiseweb@vos02.wisekey.ch"
 whoami = getpass.getuser()
@@ -36,7 +36,7 @@ listFolders = commands.getoutput('ls '+ConfFolder)
 listStack = listFolders.split()
 x = -1
 
-permissions = 0775
+permissions = '0775'
 pre_owner = 'wwwrun:www'
 post_owner = 'wiseweb:www'
 
