@@ -182,8 +182,10 @@ class SiteClass:
         self.dest_folder = dest_folder
         # either chown or chmod. 
         if self.chtype == str('chown'):
+            os.setuid(0)
             self.permscomm = 'ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         else:
+            os.setuid(0)
             self.permscomm = 'ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         return os.popen(self.permscomm)
     
@@ -191,8 +193,6 @@ class SiteClass:
     def p2p_now(self,command):
         'execute a synchronizaton command with the given parameters'
         self.command = command
-	# global pre_owner,post_owner,permissions,group
-	# File permissions chown and chmod prior to rsync
         self.progress = self.show_progress()
         return os.popen(self.command),self.progress
     
