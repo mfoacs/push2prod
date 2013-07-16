@@ -182,10 +182,10 @@ class SiteClass:
         self.dest_folder = dest_folder
         # either chown or chmod. 
         if self.chtype is 'chown':
-            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder
         else:
             #os.setuid(0)
-            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chmod '+self.ownerormode+' '+self.dest_folder
         return os.popen(self.permscomm)
     
     
@@ -320,7 +320,7 @@ def s_options(rootFolder):
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
-                #syncsite.permsowner(localFolder,'chmod',permissions)
+                syncsite.permsowner(localFolder,'chmod',permissions)
                 syncsite.permsowner(localFolder,'chown',pre_owner)
                 screen.addstr(11,4,"File permissions and ownership on "+localFolder+"/* restored.",curses.A_BOLD)
                 
