@@ -183,11 +183,11 @@ class SiteClass:
         # either chown or chmod. 
         if self.chtype == str('chown'):
             #os.setuid(0)
-            self.permscomm = 'sudo -E ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         else:
             #os.setuid(0)
-            self.permscomm = 'sudo -E ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
-        return os.system(self.permscomm)
+            self.permscomm = 'ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+        return os.popen(self.permscomm)
     
     
     def p2p_now(self,command):
