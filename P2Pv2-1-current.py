@@ -38,7 +38,7 @@ x = -1
 
 permissions = '0775'
 pre_owner = 'wwwrun:www'
-post_owner = 'wiseweb:www'
+post_owner = 'wiseweb:users'
 
 
 MailServer="mailcleaner.wisekey.ch"
