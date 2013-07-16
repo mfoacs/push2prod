@@ -316,7 +316,7 @@ def s_options(rootFolder):
                 synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
                 # Change owner to wiseweb
-                syncsite.permsowner(localFolder+'/* -Rfv','chown',post_owner)
+                syncsite.permsowner(localFolder,'chown',post_owner)
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
