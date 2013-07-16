@@ -183,10 +183,10 @@ class SiteClass:
         # either chown or chmod. 
         if self.chtype == str('chown'):
             #os.setuid(0)
-            self.permscomm = 'ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'sudo -E ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         else:
             #os.setuid(0)
-            self.permscomm = 'ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            self.permscomm = 'sudo - E ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         return os.popen(self.permscomm)
     
     
