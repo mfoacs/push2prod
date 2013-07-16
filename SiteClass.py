@@ -1,65 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# P2Pv2.py (version 2.0 - 14/10/2010)
-#
-# Changelog:
-# 31.01.2012 	MDA	V2 Creation from push2prod v1.1.
-#			New Features include sending email with results and advanced logging
-# 30.10.2012    MDA     v3 Classes, progress bar, archive handling improved.
-# TODO: Avanced Menu with site version and remote files delete option
-##############################################################################################
 
+# Imports
 
-
-import curses
-import os
-import commands
-import getpass
-from socket import gethostname, gethostbyname
 import re
+import os
 import time
 import shutil
-import smtplib
-from email.mime.text import MIMEText
-from types import *
+import curses
+import subprocess
+import commands
 import tarfile
-
-# Global VARS
-ConfFolder="/home/wiseweb/public_html/conf/"
-RootFolder="P2P_ROOT"
-PROD="wiseweb@vos02.wisekey.ch"
-whoami = getpass.getuser()
-connectionIP = gethostbyname(gethostname())
-baselogstring = whoami+'@'+connectionIP
-# operating_agents = ('NDB','KLB','MDA','MRO','PFU','OTHER')
-listFolders = commands.getoutput('ls '+ConfFolder)
-listStack = listFolders.split()
-x = -1
-
-MailServer="mailcleaner.wisekey.ch"
-mailtoProd=['techalert@wisekey.com']
-mailtoAdmin=['supportwa@wisekey.com']
-
-
-def send_mail(attach,to,subject,server):
-    "Send the notification message"
-    sender="P2Pv2 <prod@wisekey.com>"
-    headers="From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n" % (sender, to, subject)
-    fp = open(attach, 'rb')
-    # Create a text/plain message
-    msg = MIMEText(fp.read())
-    fp.close()
-    message=headers + msg.as_string()
-    mailServer=smtplib.SMTP(server)
-    mailServer.sendmail(sender, to, message)
-    mailServer.quit()
-
-def write2log(logtext):
-    "Writing messages to the logfile"
-    fileHandle=open (logfile, 'a')
-    fileHandle.write(logtext+'\n')
-    fileHandle.close()
-    
 
 class ProgressBar:
     """ Creates a text-based progress bar. Call the object with the `print'
@@ -129,16 +80,16 @@ class ProgressBar:
 
 
 class SiteClass:
-    """ A site is website, what else would it be?"""
+    'A site is website, what else would it be?'
     def __init__(self,apacheconf,prodserver):
         self.apacheconf = apacheconf
         self.prodserver = prodserver
         self.errors = []
         
     def show_progress(self):
-        "A progress bar"
+        win = curses.initscr()
         #Create a window object.
-        win = curses.newwin(3,32,18,10)
+        win = curses.newwin(3,32,14,10)
         # Add the Border
         win.border(0)
         # Current text: Progress
@@ -148,18 +99,21 @@ class SiteClass:
         # Random number I chose for demonstration.
         for i in range(15):
             # Add '.' for each iteration.
-            win.addstr(1,pos,"%")
+            win.addstr(1,pos,".")
             # Refresh or we'll never see it.
             win.refresh()
             # Here is where you can customize for data/percentage.
-            time.sleep(0.07)
+            time.sleep(0.05)
             # Need to move up or we'll just redraw the same cell!
             pos += 1
         # Current text: Progress ............... Done!
         win.addstr(1,26,"Done!")
         # Gotta show our changes.
         win.refresh()
+        # Without this the bar fades too quickly for this example.
         time.sleep(0.5)
+        curses.endwin()
+        
     
     def p2p_root(self,pattern):
         'Get the root folder in the Apache conf file'
@@ -169,12 +123,13 @@ class SiteClass:
                 if re.search(self.pattern,line):
                     self.rootfolder = re.search('/.*',line).group()
                     return self.rootfolder
-    
+
     def p2p_now(self,command):
         'execute a synchronizaton command with the given parameters'
         self.command = command
-        self.progress = self.show_progress()
-        return os.popen(self.command),self.progress
+        #self.progress = self.show_progress()
+        return subprocess.call(self.command,shell=True)
+        #self.progress
     
     def filetoday(self):
         'Log file'
@@ -226,7 +181,7 @@ class SiteClass:
         else:
             self.cmdbck = ('rsync -pravzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
         if not os.path.exists(self.archivefolder):
-            #print "No archive folder found. Creating one..."
+            print "No archive folder found. Creating one..."
             os.makedirs(self.archivefolder)
         self.madeit = self.p2p_now(self.cmdbck)
         self.archived = shutil.make_archive(self.archivefile,'gztar',self.snapshots)
@@ -254,126 +209,37 @@ class SiteClass:
         m = tar.extractall(self.restorepoint)
         tar.close()
 	os.remove(self.archivename)
-        return tar, m, self.archivename, self.restorepoint,  self.show_progress(), self.message
-
-
-
-def s_options(rootFolder):
-	"""What do to do with the select folder/site """
-	global file_count
-        file_count = syncsite.countfiles()
-	localFolder = rootFolder
-        global logging
-        global logfile
-        logging = syncsite.filetoday()
-        logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
+        return tar, m, self.archivename, self.restorepoint, self.show_progress(), self.message
         
-        # Screen stuff
-        opts = ""
-        screen.clear()
-        screen.border(0)
-        screen.addstr(2, 2,"Found files to update: "+'{0}\r'.format(file_count),curses.A_BOLD)
         
-	while opts != ord('0'):
-            screen.addstr(3, 4,"1 - Backup Remote Site")
-            screen.addstr(4, 4,"2 - Synchronize from Local to Remote: ["+localFolder+"/* "+syncsite.prodserver+"]")
-            screen.addstr(5, 4,"3 - Restore from a Local backup and synchronize to Remote")
-            screen.addstr(6, 4,"0 - Exit the application now")
-            screen.addstr(7, 4,"Type a menu option and hit Enter: ",curses.A_BOLD)
-            screen.refresh()
-            opts = screen.getch()
-            if opts == ord('1'):
-                write2log("["+syncsite.timestamp+"]: ==================================================================")
-                write2log("["+syncsite.timestamp+"]: Creating backup and archive ")
-                screen.addstr(10, 4,"Backup remote finished.",curses.A_STANDOUT)
-                syncsite.backup2archive()
-                screen.refresh()
-                write2log("["+baselogstring+"]: ==================================================================")
-                #break
-            if opts == ord('2'):
-                write2log("["+syncsite.timestamp+"]: ==================================================================")
-                write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
-                synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
-		screen.addstr(10, 4,"Synchronization finished.",curses.A_BOLD)
-                syncsite.p2p_now(synccommand)
-                screen.refresh()
-                write2log("["+baselogstring+"]: ==================================================================")
-                #break
-            if opts == ord('3'):
-                write2log("["+syncsite.timestamp+"]: ==================================================================")
-                write2log("["+syncsite.timestamp+"]: Restoring Backup ")
-                archive_lst = syncsite.archivecount()
-                arch_lst_stack = archive_lst.split()
-                if len(archive_lst) > 0:
-                    s = 10
-                    fsel = 0
-                    for i,tarred in enumerate(archive_lst.split()):
-                        fnum = "%i - " %(i+1,)
-                        fname = "%s" %(tarred,)
-                        screen.addstr(s,4,fnum+fname,curses.A_BOLD)
-                        s = s+1
-                        i = i+1
-                    screen.addstr(s, 4, "0 - Exit")
-                    screen.addstr(s+1, 4, "Select backup to restore: ",curses.A_STANDOUT)
-                    screen.refresh()
-                    fsel = screen.getstr()
-                    if fsel != '0': 
-                        screen.addstr(s+2,4,"Enter the folder name, relative to ["+localFolder+"] to restore the backup: ",curses.A_BOLD)
-                        tmpf = screen.getstr()
-                        sX = int(fsel)-1
-                        syncsite.restorearchive(arch_lst_stack[sX],tmpf)
-                        screen.addstr(s+3,4,syncsite.message)
-                        screen.refresh()
-                    else:
-                        screen.refresh()
-                write2log("["+baselogstring+"]: ==================================================================")
-                #break
-        screen.refresh()
-        # send email with all logs!!!
-        send_mail(logfile,"techalert@wisekey.com","Finished PUSH2PROD operations for "+syncsite.syncsite,MailServer)
-        init_screen('0')
 
-def init_screen(xval):
-    global s
-    global screen
-    global syncsite
-    global lFolder
-    s = 4
-    while xval != ('0'):
-        screen = curses.initscr()
-        curses.start_color()
-        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        screen.clear()
-        screen.border(0)
-        screen.addstr(2, 2, "[ P2Pv3 : Available Sites ]",curses.A_BOLD)
 
-        for i,conf in enumerate(listFolders.split()):
-            menu_string = "%i - " %(i+1,)
-            screen.addstr(s, 4, menu_string+conf)
-            s = s+1
-            i = i+1
-        screen.addstr(s, 4, "0 - Exit")
-        screen.addstr(s+1, 4, "Type site Number and hit Enter: ",curses.A_STANDOUT)
-        screen.refresh()
-        xval = screen.getstr()
-        
-        if xval != '0':
-            curses.endwin()
-            sX = int(xval)-1
-            sconf = listStack[sX]
-            sl = len(listStack)
-            syncsite = SiteClass(ConfFolder+sconf,PROD)
-            lFolder = syncsite.p2p_root(RootFolder)
-            if type(lFolder) is NoneType:
-                screen.addstr(sl+7,4,"ERROR:" +sconf+" has not P2P_ROOT variable set. Please correct before using this tool.",curses.color_pair(1))
-                screen.addstr(sl+8,4,"Press any key to continue")
-                curses.endwin()
-                opts = screen.getch()
-                init_screen('0')
-            else:
-               s_options(lFolder)
-        else:
-            curses.endwin()
-            return 0
-init_screen(x)
+
+flists = ['ddss','sdsd','dfsdf','dssd']
+testsite = SiteClass("test.conf","root@vosstg01.wisekey.ch")
+print testsite.p2p_root('P2P_ROOT')
+print testsite.countfiles()
+print testsite.siteversion()
+print testsite.cleanup(flists)
+print testsite.filetoday()
+print testsite.backup2archive()
+print testsite.siteversion()
+print testsite.prodserver
+print testsite.syncsite
+print testsite.logfolder
+print testsite.archivecount()
+
+sop = testsite.archivecount()
+#print sop.split()
+print testsite.restorearchive("20121030-15h.tar.gz","TMP")
+
+
+
+'''
+print "Employee.__doc__:", SiteClass.__doc__
+print "Employee.__name__:", SiteClass.__name__
+print "Employee.__module__:", SiteClass.__module__
+print "Employee.__bases__:", SiteClass.__bases__
+print "Employee.__dict__:", SiteClass.__dict__
+'''
+
