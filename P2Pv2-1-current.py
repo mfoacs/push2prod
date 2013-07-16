@@ -321,8 +321,9 @@ def s_options(rootFolder):
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
-                screen.addstr(12,4,"Dealing with permissions...",curses.A_BOLD)
+                screen.addstr(11,4,"Restoring file permissions on "+localFolder+"...DONE",curses.A_BOLD)
                 syncsite.permsowner(localFolder,'chmod',permissions)
+                screen.addstr(12,4,"Restoring file ownership...DONE",curses.A_BOLD)
                 syncsite.permsowner(localFolder,'chown',pre_owner)
                
                 screen.refresh()
