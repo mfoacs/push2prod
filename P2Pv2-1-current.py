@@ -21,11 +21,11 @@ import time
 import shutil
 import smtplib
 from email.mime.text import MIMEText
-from types import *
+from types import NoneType
 import tarfile
 
 # Global VARS
-ConfFolder="/home/wiseweb/public_html/conf/"
+ConfFolder="/home/wiseweb/public_html/conf"
 RootFolder="P2P_ROOT"
 PROD="wiseweb@vos02.wisekey.ch"
 whoami = getpass.getuser()
@@ -35,6 +35,11 @@ baselogstring = whoami+'@'+connectionIP
 listFolders = commands.getoutput('ls '+ConfFolder)
 listStack = listFolders.split()
 x = -1
+
+permissions = 0775
+pre_owner = 'wwwrun:www'
+post_owner = 'wiseweb:www'
+
 
 MailServer="mailcleaner.wisekey.ch"
 mailtoProd=['techalert@wisekey.com']
@@ -59,7 +64,6 @@ def write2log(logtext):
     fileHandle=open (logfile, 'a')
     fileHandle.write(logtext+'\n')
     fileHandle.close()
-    
 
 class ProgressBar:
     """ Creates a text-based progress bar. Call the object with the `print'
@@ -169,6 +173,20 @@ class SiteClass:
                 if re.search(self.pattern,line):
                     self.rootfolder = re.search('/.*',line).group()
                     return self.rootfolder
+    
+    
+    def permsowner(self,dest_folder,change_type,owner_or_mode):
+        'Changes ownership of the remote folder'
+        self.chtype = change_type
+        self.ownerormode = owner_or_mode
+        self.dest_folder = dest_folder
+        # either chown or chmod. 
+        if self.chtype == str('chown'):
+            self.permscomm = 'ssh -l root vos02 chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+        else:
+            self.permscomm = 'ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+        return os.popen(self.permscomm)
+    
     
     def p2p_now(self,command):
         'execute a synchronizaton command with the given parameters'
@@ -295,9 +313,19 @@ def s_options(rootFolder):
             if opts == ord('2'):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
-                synccommand = ('rsync --chmod=a+rwx -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
-		screen.addstr(10, 4,"Synchronization finished.",curses.A_BOLD)
+                # syncsite.syncsite contains: 
+                #
+                #
+                synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
+                screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
+                # Change owner to wiseweb
+                syncsite.permsowner(localFolder,'chown',post_owner)
+                # Sync site
                 syncsite.p2p_now(synccommand)
+                # Change permissions to 0775 and owner back to wwwrun
+                syncsite.permsowner(localFolder,'chmod',permissions)
+                syncsite.permsowner(localFolder,'chown',pre_owner)
+               
                 screen.refresh()
                 write2log("["+baselogstring+"]: ==================================================================")
                 #break
@@ -365,7 +393,7 @@ def init_screen(xval):
             sX = int(xval)-1
             sconf = listStack[sX]
             sl = len(listStack)
-            syncsite = SiteClass(ConfFolder+sconf,PROD)
+            syncsite = SiteClass(ConfFolder+'/'+sconf,PROD)
             lFolder = syncsite.p2p_root(RootFolder)
             if type(lFolder) is NoneType:
                 screen.addstr(sl+7,4,"ERROR:" +sconf+" has not P2P_ROOT variable set. Please correct before using this tool.",curses.color_pair(1))
