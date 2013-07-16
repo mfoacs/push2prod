@@ -187,7 +187,7 @@ class SiteClass:
         else:
             #os.setuid(0)
             self.permscomm = 'sudo -E ssh -l root vos02 chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
-        return os.popen(self.permscomm)
+        return os.system(self.permscomm)
     
     
     def p2p_now(self,command):
