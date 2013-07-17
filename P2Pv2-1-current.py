@@ -286,8 +286,6 @@ def s_options(rootFolder):
     global logfile
     logging = syncsite.filetoday()
     logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
-    # Change owner to wiseweb
-    syncsite.permsowner(localFolder,'chown',post_owner)
         
     # Screen stuff
     opts = ""
@@ -314,10 +312,12 @@ def s_options(rootFolder):
             if opts == ord('2'):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
+
                 # syncsite.syncsite
                 synccommand = ('rsync -rvzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
-
+                # Change owner to wiseweb
+                syncsite.permsowner(localFolder,'chown',post_owner)
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
