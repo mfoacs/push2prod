@@ -287,7 +287,7 @@ def s_options(rootFolder):
     logging = syncsite.filetoday()
     logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
     # Change owner to wiseweb
-    syncsite.permsowner(localFolder,'chown',post_owner)
+    PermsOrOwner = syncsite.permsowner(localFolder,'chown',post_owner)
         
     # Screen stuff
     opts = ""
@@ -353,8 +353,8 @@ def s_options(rootFolder):
                 write2log("["+baselogstring+"]: ==================================================================")
                 #break
     # Change permissions to 0775 and owner back to wwwrun
-    syncsite.permsowner(localFolder,'chmod',permissions)
-    syncsite.permsowner(localFolder,'chown',pre_owner)
+    PermsOrOwner = syncsite.permsowner(localFolder,'chmod',permissions)
+    PermsOrOwner = syncsite.permsowner(localFolder,'chown',pre_owner)
     screen.addstr(11,4,"File permissions and ownership on "+localFolder+"/* restored.",curses.A_BOLD)
     screen.refresh()
     # send email with all logs!!!
