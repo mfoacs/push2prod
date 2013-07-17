@@ -38,7 +38,7 @@ x = -1
 
 permissions = '0775'
 pre_owner = 'wwwrun:www'
-post_owner = 'wiseweb:users'
+post_owner = 'wiseweb:www'
 
 
 MailServer="mailcleaner.wisekey.ch"
@@ -183,7 +183,6 @@ class SiteClass:
         # either chown or chmod. 
         if self.chtype == 'chown':
             self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
-            print self.permscomm
         else:
             #os.setuid(0)
             self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
@@ -242,9 +241,9 @@ class SiteClass:
         self.archivefile = self.archivefolder+self.filetoday()
         if not os.path.exists(self.snapshots):
             os.makedirs(self.snapshots)
-            self.cmdbck = ('rsync -prvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
+            self.cmdbck = ('rsync -rvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
         else:
-            self.cmdbck = ('rsync -prvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
+            self.cmdbck = ('rsync -rvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
         if not os.path.exists(self.archivefolder):
             #print "No archive folder found. Creating one..."
             os.makedirs(self.archivefolder)
@@ -287,6 +286,8 @@ def s_options(rootFolder):
     global logfile
     logging = syncsite.filetoday()
     logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
+    # Change owner to wiseweb
+    syncsite.permsowner(localFolder,'chown',post_owner)
         
     # Screen stuff
     opts = ""
@@ -314,11 +315,9 @@ def s_options(rootFolder):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
                 # syncsite.syncsite
-                synccommand = ('rsync -prvzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
+                synccommand = ('rsync -rvzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
-                # Change owner to wiseweb
-                syncsite.permsowner(localFolder,'chown',post_owner)
-                time.sleep(5)
+
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
