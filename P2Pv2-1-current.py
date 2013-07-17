@@ -181,7 +181,7 @@ class SiteClass:
         self.ownerormode = owner_or_mode
         self.dest_folder = dest_folder
         # either chown or chmod. 
-        if self.chtype is 'chown':
+        if self.chtype == 'chown':
             self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
         else:
             #os.setuid(0)
