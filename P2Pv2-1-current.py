@@ -217,7 +217,7 @@ class SiteClass:
         self.count = 0
         self.syncsite = self.prodserver+':'+self.rootfolder
         self.exclusions = "--exclude-from "+self.rootfolder+"/.nP2P"
-        self.cmdcount = ('rsync -ravzOn --include .htaccess --progress '+self.exclusions+' '+self.rootfolder+'/* '+self.syncsite)
+        self.cmdcount = ('rsync -rvzOn --include .htaccess --progress '+self.exclusions+' '+self.rootfolder+'/* '+self.syncsite)
         for i,fileList in enumerate(os.popen(self.cmdcount)):
             self.count = i+1
             #print "File count: "+'{0}\r'.format(self.count),
@@ -242,9 +242,9 @@ class SiteClass:
         self.archivefile = self.archivefolder+self.filetoday()
         if not os.path.exists(self.snapshots):
             os.makedirs(self.snapshots)
-            self.cmdbck = ('rsync -pravzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
+            self.cmdbck = ('rsync -prvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
         else:
-            self.cmdbck = ('rsync -pravzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
+            self.cmdbck = ('rsync -prvzhWm --progress --log-file='+self.logfolder+"/P2P-"+self.filetoday()+'.log '+self.exclusions+' '+self.syncsite+' '+self.snapshots)
         if not os.path.exists(self.archivefolder):
             #print "No archive folder found. Creating one..."
             os.makedirs(self.archivefolder)
@@ -316,7 +316,7 @@ def s_options(rootFolder):
                 write2log("["+syncsite.timestamp+"]: ==================================================================")
                 write2log("["+syncsite.timestamp+"]: Calling rsync remote server ")
                 # syncsite.syncsite
-                synccommand = ('rsync -pravzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
+                synccommand = ('rsync -prvzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
                 # Sync site
                 syncsite.p2p_now(synccommand)
