@@ -182,8 +182,8 @@ class SiteClass:
         self.dest_folder = dest_folder
         # either chown or chmod. 
         if self.chtype == 'chown':
-            print self.chtype, self.dest_folder
             self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chown '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
+            print self.chtype, self.dest_folder, self.permscomm
         else:
             #os.setuid(0)
             self.permscomm = 'ssh -l wiseweb vos02 sudo /bin/chmod '+self.ownerormode+' '+self.dest_folder+'/* -Rfv'
@@ -287,8 +287,6 @@ def s_options(rootFolder):
     global logfile
     logging = syncsite.filetoday()
     logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
-    # Change owner to wiseweb
-    syncsite.permsowner(localFolder,'chown',post_owner)
         
     # Screen stuff
     opts = ""
@@ -318,6 +316,9 @@ def s_options(rootFolder):
                 # syncsite.syncsite
                 synccommand = ('rsync -prvzhWm --progress --log-file='+logfile+' '+syncsite.exclusions+' '+syncsite.rootfolder+'/* '+syncsite.syncsite)
                 screen.addstr(10,4,"Synchronization finished.",curses.A_BOLD)
+                # Change owner to wiseweb
+                syncsite.permsowner(localFolder,'chown',post_owner)
+                time.sleep(1)
                 # Sync site
                 syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
