@@ -319,7 +319,7 @@ def s_options(rootFolder):
                 # Change owner to wiseweb
                 syncsite.permsowner(localFolder,'chown',post_owner)
                 # Sync site
-                syncsite.p2p_now(synccommand)
+                # syncsite.p2p_now(synccommand)
                 # Change permissions to 0775 and owner back to wwwrun
                 syncsite.permsowner(localFolder,'chmod',permissions)
                 syncsite.permsowner(localFolder,'chown',pre_owner)
