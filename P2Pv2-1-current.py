@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# P2Pv2.py (version 2.0 - 14/10/2010)
-#
-# Changelog:
-# 31.01.2012 	MDA	V2 Creation from push2prod v1.1.
-#			New Features include sending email with results and advanced logging
-# 30.10.2012    MDA     v3 Classes, progress bar, archive handling improved.
-# TODO: Avanced Menu with site version and remote files delete option
-##############################################################################################
+# P2Pv2-67426eaf86
+# CHANGELOG:
+# 31.01.2012 	MDA	   V2 Creation from push2prod v1.1.: New Features include sending email with results and advanced logging
+# 30.10.2012    MDA    v3.0.0 Classes, progress bar, archive handling improved.
+# 17.07.2013    MDA    v3.0.1 Added handling file permissions correctly. (git show-ref refs/heads/master | cut -d " " -f 1 | cut -c 31-40)
+# TODO                 Avanced Menu with site version and remote files delete option.
+###############################################################################################################################
 
 
 
@@ -286,7 +285,7 @@ def s_options(rootFolder):
     global logfile
     logging = syncsite.filetoday()
     logfile = syncsite.logfolder+"/P2P-"+logging+'.log'
-    # Change owner to wiseweb
+    # Change owner to wiseweb, initialize instance of persmowner
     PermsOrOwner = syncsite.permsowner(localFolder,'chown',post_owner)
         
     # Screen stuff
